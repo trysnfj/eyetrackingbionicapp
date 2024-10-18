@@ -4,6 +4,7 @@ import PyPDF2
 import numpy as np
 from PIL import Image
 import threading
+import cv2
 
 try:
     from docx import Document
@@ -86,59 +87,78 @@ def start_eye_tracking():
 
 # Streamlit app
 st.title("Bionic Reading App with Eye-Tracking Integration")
-st.markdown("This app helps you read faster by emphasizing the first part of each word.")
+st.markdown("""
+### Make Reading Faster and More Efficient
 
-# File uploader for text, Word, or PDF files
-uploaded_file = st.file_uploader("Upload a text, Word, or PDF file:")
+The **Bionic Reading App** helps you enhance your reading experience by emphasising the first part of each word using **color coding** and **gradients**. Additionally, this app integrates a **webcam-based eye-tracking simulation** to make your reading journey interactive and adaptive.
 
-user_input = ""
-file_text = ""
-if uploaded_file is not None:
-    file_type = uploaded_file.type
-    try:
-        if file_type == "text/plain":
-            file_text = uploaded_file.read().decode("utf-8")
-        elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-            if Document is None:
-                raise ImportError("The 'python-docx' library is not installed.")
-            doc = Document(uploaded_file)
-            file_text = "\n".join([para.text for para in doc.paragraphs])
-        elif file_type == "application/pdf":
-            pdf_reader = PyPDF2.PdfReader(uploaded_file)
-            for page in pdf_reader.pages:
-                text = page.extract_text()
-                if text:
-                    file_text += text
-        else:
-            st.error("Unsupported file format. Please upload a text (.txt), Word (.docx), or PDF (.pdf) file.")
-    except ImportError as e:
-        st.error(str(e))
-    except Exception as e:
-        st.error(f"An error occurred while processing the file: {str(e)}")
-    if file_text:
-        user_input = st.text_area("File Content", file_text, height=200)
-else:
-    user_input = st.text_area("Enter the text you want to read in Bionic style:", height=200)
+##### Features:
+- **Bionic Reading Conversion**: Emphasise the first part of each word for better focus.
+- **Color Gradients**: Choose a gradient to apply to the text for an aesthetically pleasing effect.
+- **Eye-Tracking Simulation**: Use a webcam to simulate eye-tracking and make reading interactive.
 
-# Slider to adjust bold ratio
-bold_ratio = st.slider("Select the bold ratio (percentage of each word to bold):", 0.1, 0.9, 0.5)
+Get started by uploading a document or entering your own text below.
+""")
 
-# Color pickers to choose the start and end colors for the gradient
-gradient_start = st.color_picker("Choose the start color for the gradient:", value='#0000FF')
-gradient_end = st.color_picker("Choose the end color for the gradient:", value='#FF0000')
+# Navigation Menu
+option = st.sidebar.selectbox("Choose an action:", ("Home", "Bionic Reading Conversion", "Eye-Tracking Simulation"))
 
-# Convert text to bionic reading style if button is pressed
-if st.button("Convert to Bionic Reading"):
-    if user_input:
-        bionic_text = bionic_read(user_input, bold_ratio, gradient_start, gradient_end)
-        st.markdown(bionic_text, unsafe_allow_html=True)
+if option == "Home":
+    st.write("Welcome! Use the sidebar to navigate to different features of the app.")
+
+elif option == "Bionic Reading Conversion":
+    # File uploader for text, Word, or PDF files
+    uploaded_file = st.file_uploader("Upload a text, Word, or PDF file:")
+
+    user_input = ""
+    file_text = ""
+    if uploaded_file is not None:
+        file_type = uploaded_file.type
+        try:
+            if file_type == "text/plain":
+                file_text = uploaded_file.read().decode("utf-8")
+            elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                if Document is None:
+                    raise ImportError("The 'python-docx' library is not installed.")
+                doc = Document(uploaded_file)
+                file_text = "\n".join([para.text for para in doc.paragraphs])
+            elif file_type == "application/pdf":
+                pdf_reader = PyPDF2.PdfReader(uploaded_file)
+                for page in pdf_reader.pages:
+                    text = page.extract_text()
+                    if text:
+                        file_text += text
+            else:
+                st.error("Unsupported file format. Please upload a text (.txt), Word (.docx), or PDF (.pdf) file.")
+        except ImportError as e:
+            st.error(str(e))
+        except Exception as e:
+            st.error(f"An error occurred while processing the file: {str(e)}")
+        if file_text:
+            user_input = st.text_area("File Content", file_text, height=200)
     else:
-        st.warning("Please enter or upload some text.")
+        user_input = st.text_area("Enter the text you want to read in Bionic style:", height=200)
 
-# Start eye-tracking simulation using OpenCV if button is pressed
-if st.button("Start Eye-Tracking Simulation"):
-    st.error("OpenCV functionality is currently disabled. Please ensure 'opencv-python-headless' is installed to enable this feature.")
+    # Slider to adjust bold ratio
+    bold_ratio = st.slider("Select the bold ratio (percentage of each word to bold):", 0.1, 0.9, 0.5)
+
+    # Color pickers to choose the start and end colors for the gradient
+    gradient_start = st.color_picker("Choose the start color for the gradient:", value='#0000FF')
+    gradient_end = st.color_picker("Choose the end color for the gradient:", value='#FF0000')
+
+    # Convert text to bionic reading style if button is pressed
+    if st.button("Convert to Bionic Reading"):
+        if user_input:
+            bionic_text = bionic_read(user_input, bold_ratio, gradient_start, gradient_end)
+            st.markdown(bionic_text, unsafe_allow_html=True)
+        else:
+            st.warning("Please enter or upload some text.")
+
+elif option == "Eye-Tracking Simulation":
+    # Start eye-tracking simulation using OpenCV if button is pressed
+    if st.button("Start Eye-Tracking Simulation"):
+        start_eye_tracking()
 
 # Reset button to clear inputs
-if st.button("Reset"):
+if st.sidebar.button("Reset"):
     st.experimental_rerun()
