@@ -162,3 +162,4 @@ elif option == "Eye-Tracking Simulation":
 # Reset button to clear inputs
 if st.sidebar.button("Reset"):
     st.experimental_rerun()
+
